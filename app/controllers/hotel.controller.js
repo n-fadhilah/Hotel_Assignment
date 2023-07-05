@@ -1,6 +1,7 @@
 const axios = require("axios");
 const apiConfig = require("../config/api.config.js");
 const apiUrls = apiConfig.apiUrls;
+const Hotel = require("./models/Hotel");
 
 exports.getallhotels = async (req, res) => {
   try {
