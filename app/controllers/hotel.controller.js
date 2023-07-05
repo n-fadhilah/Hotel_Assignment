@@ -4,25 +4,25 @@ const apiUrls = apiConfig.apiUrls;
 
 exports.getallhotels = async (req, res, client) => {
   try {
-    const aggregatedResults = [];
+    const allHotels = [];
     const apiRequests = apiUrls.map((url) => axios.get(url));
     const responses = await Promise.all(apiRequests);
 
     responses.forEach(async (response, index) => {
       aggregatedResults.push(...response.data);
-      const collectionName = `supplier_${index + 1}`;
-      const collection = client.db().collection(collectionName);
+      const supplierName = `supplier_${index + 1}`;
+      const supplierCollection = client.db().collection(supplierName);
 
-      const result = await collection.insertMany(response.data);
+      const result = await supplierCollection.insertMany(response.data);
       console.log(
-        `Inserted ${result.insertedCount} hotel(s) into collection ${collectionName}`
+        `Inserted ${result.insertedCount} hotel(s) into collection ${supplierName}`
       );
     });
 
-    const collection1 = client.db().collection("allHotels");
-    await collection1.insertMany(aggregatedResults);
+    const allhotelCollection = client.db().collection("allHotels");
+    await allhotelCollection.insertMany(allHotels);
 
-    res.json(aggregatedResults);
+    res.json(allHotels);
   } catch (error) {
     console.error("An error occurred while fetching hotel data:", error);
     res.status(500).json({ error: "Failed to fetch hotel data" });
