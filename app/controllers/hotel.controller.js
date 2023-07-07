@@ -4,20 +4,14 @@ const apiUrls = apiConfig.apiUrls;
 
 exports.getallhotels = async (req, res, client) => {
   try {
-    const allHotels = [];
     const apiRequests = apiUrls.map((url) => axios.get(url));
     const responses = await Promise.all(apiRequests);
 
-    const allhotelCollection = client.db().collection("allHotels");
+    const allhotelCollection = client.db().collection("hotels");
 
-    for (let index = 0; index < responses.length; index++) {
-      const response = responses[index];
-      allHotels.push(...response.data);
-      const supplierName = `supplier_${index + 1}`;
-      const supplierCollection = client.db().collection(supplierName);
-
-      await saveHotelstoDb(response, supplierCollection, allhotelCollection);
-    }
+    await Promise.all(
+      responses.map((response) => saveHotelstoDb(response, allhotelCollection))
+    );
 
     const hotelsData = await allhotelCollection.find().toArray();
     res.json(hotelsData);
@@ -28,11 +22,21 @@ exports.getallhotels = async (req, res, client) => {
   }
 };
 
-async function saveHotelstoDb(
-  response,
-  supplierCollection,
-  allhotelCollection
-) {
+async function saveHotelstoDb(response, allhotelCollection) {
+  const propertiesToDelete = [
+    "address",
+    "Address",
+    "postalcode",
+    "Longitude",
+    "Latitude",
+    "amenities",
+    "Description",
+    "info",
+    "details",
+    "hotel_name",
+    "name",
+  ];
+
   const updatePromises = response.data.map(async (document) => {
     const {
       hotel_id: hotelId,
@@ -41,29 +45,51 @@ async function saveHotelstoDb(
       DestinationId,
       destination_id,
       destination,
+      Description,
+      info,
+      details,
       ...cleanDocument
     } = document;
+
+    const hotelDescription = Description || info || details;
 
     const query = {
       hotelId: hotelId || Id || id,
       destinationId: DestinationId || destination_id || destination,
     };
-    const update = { $set: cleanDocument };
+
+    propertiesToDelete.forEach((property) => {
+      delete cleanDocument[property];
+    });
+
+    const standardizedDocument = Object.keys(cleanDocument).reduce(
+      (result, key) => {
+        result[key.toLowerCase()] = cleanDocument[key];
+        return result;
+      },
+      {}
+    );
+
+    const update = {
+      $set: { ...standardizedDocument, hotelDescription },
+    };
+
+    Object.keys(update.$set).forEach((key) => {
+      if (update.$set[key] === null) {
+        delete update.$set[key];
+      }
+    });
+
     const options = { upsert: true };
     delete document._id;
 
-    const supplierUpdatePromise = supplierCollection.updateOne(
-      query,
-      update,
-      options
-    );
     const allHotelUpdatePromise = allhotelCollection.updateOne(
       query,
       update,
       options
     );
 
-    return Promise.all([supplierUpdatePromise, allHotelUpdatePromise]);
+    return allHotelUpdatePromise;
   });
 
   await Promise.all(updatePromises);
