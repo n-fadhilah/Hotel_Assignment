@@ -8,6 +8,7 @@ const cache = new NodeCache();
 
 exports.getHotels = async (req, res, client) => {
   try {
+    getAllHotels(client);
     const { destinationid, hotelid } = req.query;
     let query = {};
     if (destinationid) {
