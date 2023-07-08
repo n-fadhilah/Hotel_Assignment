@@ -33,7 +33,7 @@ exports.getHotels = async (req, res, client) => {
   }
 };
 
-async function getAllHotels(client) {
+async function getHotelsFromSuppliers(client) {
   try {
     const apiRequests = apiUrls.map((url) => axios.get(url));
     const responses = await Promise.all(apiRequests);
