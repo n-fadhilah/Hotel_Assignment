@@ -6,6 +6,6 @@ mongoose.Promise = global.Promise;
 const db = {};
 db.mongoose = mongoose;
 db.url = dbConfig.url;
-db.hotels = require("./hotel.model.js")(mongoose);
+db.hotel = require("./hotel.model.js")(mongoose);
 
 module.exports = db;

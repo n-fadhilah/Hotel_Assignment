@@ -1,11 +1,13 @@
 const axios = require("axios");
 const apiConfig = require("../config/api.config.js");
 const apiUrls = apiConfig.apiUrls;
+const db = require("../models");
+const Hotel = db.hotel;
 
-exports.getHotels = (req, res, client) => {
+exports.getHotels = async (req, res, client) => {
   Hotel.find(req.query)
-    .then((data) => {
-      res.send(data);
+    .then(async (data) => {
+      res.json(data);
     })
     .catch((err) => {
       res.status(500).send({
@@ -59,6 +61,7 @@ function extractHotelInfo(hotel) {
     "details",
     "hotel_name",
     "name",
+    "image",
   ];
 
   const {
@@ -71,6 +74,9 @@ function extractHotelInfo(hotel) {
     Description,
     info,
     details,
+    name,
+    Name,
+    hotel_name,
     ...hotelInfo
   } = hotel;
 
@@ -78,9 +84,10 @@ function extractHotelInfo(hotel) {
     delete hotelInfo[property];
   });
 
-  const hotelDescription = Description || info || details;
+  const hotelName = name || Name || hotel_name;
+  const hotelDescription = Description || details || info;
 
-  return { hotelInfo, hotelDescription };
+  return { hotelName, hotelInfo, hotelDescription };
 }
 
 function createQuery(hotel) {
