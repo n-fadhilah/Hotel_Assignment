@@ -3,17 +3,25 @@ const apiConfig = require("../config/api.config.js");
 const apiUrls = apiConfig.apiUrls;
 const db = require("../models");
 const Hotel = db.hotel;
+const NodeCache = require("node-cache");
+const cache = new NodeCache();
 
 exports.getHotels = async (req, res, client) => {
-  Hotel.find(req.query)
-    .then(async (data) => {
-      res.json(data);
-    })
-    .catch((err) => {
-      res.status(500).send({
-        message: err.message || "Failed to fetch hotel data",
-      });
-    });
+  try {
+    const cacheKey = JSON.stringify(req.query);
+
+    const cachedData = cache.get(cacheKey);
+    if (cachedData) {
+      return res.json(cachedData);
+    }
+
+    const hotelsData = await Hotel.find(req.query).lean();
+    cache.set(cacheKey, hotelsData);
+    res.json(hotelsData);
+  } catch (error) {
+    console.error("An error occurred while fetching hotel data:", error);
+    res.status(500).json({ error: "Failed to fetch hotel data" });
+  }
 };
 
 async function getAllHotels(client) {

@@ -4,6 +4,7 @@ const cors = require("cors");
 const axios = require("axios");
 const app = express();
 const dbConfig = require("./app/config/db.config.js");
+const NodeCache = require("node-cache");
 
 var corsOptions = {
   origin: "http://localhost:8081",
@@ -19,6 +20,7 @@ const options = {
 };
 
 const client = new MongoClient(dbConfig.url, options);
+const cache = new NodeCache();
 
 const db = require("./app/models");
 db.mongoose
