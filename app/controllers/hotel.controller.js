@@ -37,7 +37,7 @@ async function saveHotelstoDb(response, allhotelCollection) {
     "name",
   ];
 
-  const updatePromises = response.data.map(async (document) => {
+  const updatePromises = response.data.map(async (hotel) => {
     const {
       hotel_id: hotelId,
       Id,
@@ -48,8 +48,8 @@ async function saveHotelstoDb(response, allhotelCollection) {
       Description,
       info,
       details,
-      ...cleanDocument
-    } = document;
+      ...hotelInfo
+    } = hotel;
 
     const hotelDescription = Description || info || details;
 
@@ -59,12 +59,12 @@ async function saveHotelstoDb(response, allhotelCollection) {
     };
 
     propertiesToDelete.forEach((property) => {
-      delete cleanDocument[property];
+      delete hotelInfo[property];
     });
 
-    const standardizedDocument = Object.keys(cleanDocument).reduce(
+    const standardizedDocument = Object.keys(hotelInfo).reduce(
       (result, key) => {
-        result[key.toLowerCase()] = cleanDocument[key];
+        result[key.toLowerCase()] = hotelInfo[key];
         return result;
       },
       {}
