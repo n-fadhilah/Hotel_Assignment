@@ -8,6 +8,15 @@ const cache = new NodeCache();
 
 exports.getHotels = async (req, res, client) => {
   try {
+    const { destinationid, hotelid } = req.query;
+    let query = {};
+    if (destinationid) {
+      query.destinationId = { $regex: new RegExp(destinationid, "i") };
+    }
+    if (hotelid) {
+      query.hotelId = { $regex: new RegExp(hotelid, "i") };
+    }
+
     const cacheKey = JSON.stringify(req.query);
 
     const cachedData = cache.get(cacheKey);
@@ -15,7 +24,7 @@ exports.getHotels = async (req, res, client) => {
       return res.json(cachedData);
     }
 
-    const hotelsData = await Hotel.find(req.query).lean();
+    const hotelsData = await Hotel.find(query).lean();
     cache.set(cacheKey, hotelsData);
     res.json(hotelsData);
   } catch (error) {
