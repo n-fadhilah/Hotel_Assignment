@@ -2,7 +2,19 @@ const axios = require("axios");
 const apiConfig = require("../config/api.config.js");
 const apiUrls = apiConfig.apiUrls;
 
-exports.getallhotels = async (req, res, client) => {
+exports.getHotels = (req, res, client) => {
+  Hotel.find(req.query)
+    .then((data) => {
+      res.send(data);
+    })
+    .catch((err) => {
+      res.status(500).send({
+        message: err.message || "Failed to fetch hotel data",
+      });
+    });
+};
+
+async function getAllHotels(client) {
   try {
     const apiRequests = apiUrls.map((url) => axios.get(url));
     const responses = await Promise.all(apiRequests);
@@ -14,15 +26,27 @@ exports.getallhotels = async (req, res, client) => {
     );
 
     const hotelsData = await allhotelCollection.find().toArray();
-    res.json(hotelsData);
+    return hotelsData;
   } catch (error) {
     console.error("An error occurred while fetching hotel data:", error);
-    res.status(500).json({ error: "Failed to fetch hotel data" });
-    return error;
+    throw new Error("Failed to fetch hotel data");
   }
-};
+}
 
 async function saveHotelstoDb(response, allhotelCollection) {
+  const updatePromises = response.data.map(async (hotel) => {
+    const hotelInfo = extractHotelInfo(hotel);
+    const query = createQuery(hotel);
+    const update = createUpdate(hotelInfo);
+    const options = { upsert: true };
+
+    return allhotelCollection.updateOne(query, update, options);
+  });
+
+  await Promise.all(updatePromises);
+}
+
+function extractHotelInfo(hotel) {
   const propertiesToDelete = [
     "address",
     "Address",
@@ -37,60 +61,59 @@ async function saveHotelstoDb(response, allhotelCollection) {
     "name",
   ];
 
-  const updatePromises = response.data.map(async (hotel) => {
-    const {
-      hotel_id: hotelId,
-      Id,
-      id,
-      DestinationId,
-      destination_id,
-      destination,
-      Description,
-      info,
-      details,
-      ...hotelInfo
-    } = hotel;
+  const {
+    hotel_id: hotelId,
+    Id,
+    id,
+    DestinationId,
+    destination_id,
+    destination,
+    Description,
+    info,
+    details,
+    ...hotelInfo
+  } = hotel;
 
-    const hotelDescription = Description || info || details;
-
-    const query = {
-      hotelId: hotelId || Id || id,
-      destinationId: DestinationId || destination_id || destination,
-    };
-
-    propertiesToDelete.forEach((property) => {
-      delete hotelInfo[property];
-    });
-
-    const standardizedDocument = Object.keys(hotelInfo).reduce(
-      (result, key) => {
-        result[key.toLowerCase()] = hotelInfo[key];
-        return result;
-      },
-      {}
-    );
-
-    const update = {
-      $set: { ...standardizedDocument, hotelDescription },
-    };
-
-    Object.keys(update.$set).forEach((key) => {
-      if (update.$set[key] === null) {
-        delete update.$set[key];
-      }
-    });
-
-    const options = { upsert: true };
-    delete document._id;
-
-    const allHotelUpdatePromise = allhotelCollection.updateOne(
-      query,
-      update,
-      options
-    );
-
-    return allHotelUpdatePromise;
+  propertiesToDelete.forEach((property) => {
+    delete hotelInfo[property];
   });
 
-  await Promise.all(updatePromises);
+  const hotelDescription = Description || info || details;
+
+  return { hotelInfo, hotelDescription };
+}
+
+function createQuery(hotel) {
+  const {
+    hotel_id: hotelId,
+    Id,
+    id,
+    DestinationId,
+    destination_id,
+    destination,
+  } = hotel;
+
+  return {
+    hotelId: hotelId || Id || id,
+    destinationId: DestinationId || destination_id || destination,
+  };
+}
+
+function createUpdate(hotelInfo) {
+  const standardizedHotel = Object.keys(hotelInfo).reduce((result, key) => {
+    result[key.toLowerCase()] = hotelInfo[key];
+    return result;
+  }, {});
+
+  const update = {
+    $set: { ...standardizedHotel },
+  };
+
+  Object.keys(update.$set).forEach((key) => {
+    if (update.$set[key] === null) {
+      delete update.$set[key];
+    }
+  });
+
+  return update;
 }
