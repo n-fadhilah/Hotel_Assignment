@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "jest"
   },
   "keywords": [],
   "author": "Fadhilah",
@@ -16,7 +16,8 @@
     "helmet": "^7.0.0",
     "mongoose": "^7.3.1",
     "morgan": "^1.10.0",
-    "node-cache": "^5.1.2"
+    "node-cache": "^5.1.2",
+    "supertest": "^6.3.3"
   },
   "repository": {
     "type": "git",
@@ -26,5 +27,8 @@
     "url": "https://github.com/n-fadhilah/Hotel_Assignment/issues"
   },
   "homepage": "https://github.com/n-fadhilah/Hotel_Assignment#readme",
-  "description": ""
+  "description": "",
+  "devDependencies": {
+    "jest": "^29.6.1"
+  }
 }

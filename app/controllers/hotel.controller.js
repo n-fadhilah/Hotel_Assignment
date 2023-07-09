@@ -11,9 +11,7 @@ exports.getHotels = async (req, res, client) => {
     getAllHotels(client);
     const { destinationid, hotelid } = req.query;
     let query = {};
-    if (destinationid) {
-      query.destinationId = { $regex: new RegExp(destinationid, "i") };
-    }
+
     if (hotelid) {
       query.hotelId = { $regex: new RegExp(hotelid, "i") };
     }
@@ -34,7 +32,7 @@ exports.getHotels = async (req, res, client) => {
   }
 };
 
-async function getAllHotels(client) {
+async function getHotelsFromSuppliers(client) {
   try {
     const apiRequests = apiUrls.map((url) => axios.get(url));
     const responses = await Promise.all(apiRequests);

@@ -23,7 +23,7 @@ const client = new MongoClient(dbConfig.url, options);
 const cache = new NodeCache();
 
 const db = require("./app/models");
-db.mongoose
+const mongooseConnection = db.mongoose
   .connect(db.url, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
@@ -43,6 +43,8 @@ app.get("/", (req, res) => {
 require("./app/routes/hotel.routes")(app, client);
 
 const PORT = process.env.PORT || 8080;
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}.`);
 });
+
+module.exports = { app: server, mongooseConnection };
