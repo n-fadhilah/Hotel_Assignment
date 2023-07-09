@@ -1,6 +1,6 @@
 # Hotel API
 
-This API allows you to retrieve hotel data based on hotel ID or destination ID.
+This API allows you to retrieve hotel data based on hotel ID or destination ID, with data provided by 3 different suppliers.
 
 ## Getting Started
 
