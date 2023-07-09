@@ -8,7 +8,7 @@ const cache = new NodeCache();
 
 exports.getHotels = async (req, res, client) => {
   try {
-    getAllHotels(client);
+    getHotelsFromSuppliers(client);
     const { destinationid, hotelid } = req.query;
     let query = {};
 
